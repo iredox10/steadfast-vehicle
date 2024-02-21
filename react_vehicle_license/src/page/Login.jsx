@@ -4,20 +4,24 @@ import jigawa_logo from "../../src/assets/jigawa_logo.png";
 import FormInput from '../components/FormInput'
 import { useState } from 'react';
 import { NavLink, Navigate, useNavigate } from 'react-router-dom';
-import User from '../../../backend/models/user';
+import { path } from '../../utils/path';
 
 const Login = () => {
-  const [chasisNumber, setChasisNumber] = useState("");
+  const [email, setEmail] = useState("");
 const navigate = useNavigate()
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:3003/login", {
-        chasisNumber,
-      });
+      const res = await axios.post(
+        // `https://vehicle-backend.onrender.com/login`  || 
+         'http://localhost:3003/login',
+        {
+          email,
+        }
+      );
       const user = res.data
       console.log(user)
-      navigate('/user-dashboard', {state: user})
+      navigate(`/user-dashboard/${user._id}`, {state: user})
       
     } catch (err) {
       console.log(err);
@@ -56,11 +60,11 @@ const navigate = useNavigate()
           <form onSubmit={handleSubmit} className="p-2 capitalize">
             <div className="flex items-center gap-10">
               <FormInput
-                type={"text"}
-                htmlFor={"chasisNumber"}
-                label={"chasis Number"}
-                name={"chasisNumber"}
-                onchange={(e) => setChasisNumber(e.target.value)}
+                type={"email"}
+                htmlFor={"emial"}
+                label={"email"}
+                name={"email"}
+                onchange={(e) => setEmail(e.target.value)}
               />
             </div>
 

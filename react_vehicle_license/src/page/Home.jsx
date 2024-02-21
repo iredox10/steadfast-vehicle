@@ -1,11 +1,16 @@
 import coatOfArm from "../../src/assets/coat_of_arm.png";
 import jigawa_logo from "../../src/assets/jigawa_logo.png";
-import  { useState } from "react";
+import { useState } from "react";
 import FormInput from "../components/FormInput";
+import xml2js from "xml2js";
+import qs from 'qs'
+import { enc, HmacSHA256, HmacSHA512} from "crypto-js";
+import Base64 from "crypto-js/enc-base64";
+import hmacSHA512 from "crypto-js/hmac-sha512";
 import { Link, NavLink, Navigate, useNavigate } from "react-router-dom";
-import axios from 'axios'
+import axios from "axios";
 import { v4 as uuid4 } from "uuid";
-
+import { path } from "../../utils/path";
 
 const Home = () => {
   const [licenceFee, setLicenceFee] = useState(null);
@@ -18,25 +23,30 @@ const Home = () => {
   const [licenseType, setLicenseType] = useState("");
   const [color, setColor] = useState("green");
   const [err, setErr] = useState("");
-  const [weightAuthorized, setWeightAuthorized] = useState('')
-  const [personAuthorized, setPersonAuthorized] = useState('')
+  const [weightAuthorized, setWeightAuthorized] = useState("");
+  const [personAuthorized, setPersonAuthorized] = useState("");
+  const [email, setEmail] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
+  
+  const navigate = useNavigate();
+
   const changeFee = (value) => {
     // console.log(value)
     switch (value) {
       case "private motor vehicle":
-        setLicenceFee("6000");
+        setLicenceFee("6000.00");
         setColor("blue");
         break;
       case "tippper / lorry and agriculture":
-        setLicenceFee("3000");
+        setLicenceFee("3000.00");
         setColor("red");
         break;
       case "motorcycle/tricycle":
-        setLicenceFee("4000");
+        setLicenceFee("4000.00");
         setColor("purple");
         break;
       case "commercial taxi/ bus & pick-up":
-        setLicenceFee("5000");
+        setLicenceFee("5000.00");
         setColor("orange");
         break;
       default:
@@ -45,7 +55,7 @@ const Home = () => {
     }
   };
 
-  const navigate =useNavigate()
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,53 +64,48 @@ const Home = () => {
       !address ||
       !vehicleMake ||
       !vehicleType ||
-      !chasisNumber
+      !chasisNumber ||
+      !email ||
+      !phoneNumber ||
+      !weightAuthorized ||
+      !netWeight ||
+      !personAuthorized 
     ) {
       setErr("please fill all the field");
       console.log("form error");
       return;
     }
+    
 
     // navigate('invoice', {state:{ownerName,address,vehicleMake,vehicleType,licenseType,licenceFee}})
     try {
-      const res = await axios.post("http://localhost:3003/register", {
-        ownerName,
-        address,
-        vehicleMake,
-        vehicleType,
-        licenseType,
-        licenceFee,
-        netWeight,
-        chasisNumber,
-        color,
-        personAuthorized,
-        weightAuthorized,
-        applicationId: uuid4().toString(),
-        refNumber: uuid4().toString(),
-      });
+      const res = await axios.post(
+        // `https://vehicle-backend.onrender.com/register` ||
+        'http://localhost:3003/register',
+        {
+          ownerName,
+          address,
+          vehicleMake,
+          vehicleType,
+          licenseType,
+          licenceFee,
+          netWeight,
+          chasisNumber,
+          color,
+          personAuthorized,
+          weightAuthorized,
+          email,
+          phoneNumber,
+          applicationId: uuid4().toString(),
+        }
+      );
       const user = res.data
       navigate("/user-dashboard", { state: user });
+      console.log(user)
     } catch (err) {
+      setErr(err.err)
       console.log(err)
     }
-
-
-    // try {
-    //   const res = await axios.post(
-    //     "https://demo.nabroll.com.ng/api/v1/transactions/initiate",
-    //     {
-    //       publicKey: " Pk_TeStHV9FnLZE1vSidgkH36b4s473lpKYkI58gYgc6M",
-    //       secretKey: "Sk_teSTN-HY[n1]wIO32A-AU0XP5kRZ[tzHpOxQ6bf9]]",
-    //       payerRefNo: "0000001",
-    //       payerName: ownerName,
-    //       amount: licenceFee,
-    //       description: licenseType,
-    //     }
-    //   );
-    //   console.log(res.data);
-    // } catch (err) {
-    //   console.log(err);
-    // }
   };
 
   return (
@@ -198,6 +203,22 @@ const Home = () => {
               name={"licenceFee"}
               value={`N ${!licenceFee ? "0" : licenceFee}`}
             />
+            <div className="flex items-center gap-10">
+              <FormInput
+                type={"text"}
+                htmlFor={"email"}
+                label={"email"}
+                name={"email"}
+                onchange={(e) => setEmail(e.target.value)}
+              />
+              <FormInput
+                type={"text"}
+                htmlFor={"phoneNumber"}
+                label={"phone Number"}
+                name={"phoneNumber"}
+                onchange={(e) => setPhoneNumber(e.target.value)}
+              />
+            </div>
             <div className="flex items-center gap-10">
               <FormInput
                 type={"text"}

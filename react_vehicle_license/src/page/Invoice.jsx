@@ -2,7 +2,7 @@ import jigawa_logo from "../../src/assets/jigawa_logo.png";
 import { v4 as uuid4 } from "uuid";
 import { usePDF } from "react-to-pdf";
 import { FaArrowDown, FaArrowRight } from "react-icons/fa";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, redirect, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Document,
   Page,
@@ -12,39 +12,105 @@ import {
   PDFDownloadLink,
 } from "@react-pdf/renderer";
 import Pdf from "./Pdf";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { path } from "../../utils/path";
+import { HmacSHA256 } from "crypto-js";
 
 const Invoice = () => {
   const location = useLocation();
-  const {state} = location
-  console.log((state))
-  
+  // const {state} = location
+  const [state, setUser] = useState(null)
+  const {id} = useParams()
+  console.log((id))
+      useEffect(()=>{
+        const fetch =async () =>{
+            try {
+                const user = await axios(
+                  // `https://vehicle-backend.onrender.com/user/${state.chasisNumber} ||`
+                  `http://localhost:3003/user/${id}`
+                );
+                console.log(user.data)
+                setUser(user.data)
+            } catch (err) {
+                console.log(err)
+            }   
+        } 
+        fetch()
+    },[])
+ 
   const navigate = useNavigate()
 
   const { toPDF, targetRef } = usePDF({ filename: "page.pdf" });
 
-
   const [model, setModel] = useState(false)
   const [status, setStatus] = useState('paid')
-  // const handleDownload = () => {
-  //   saveAsPdf(contentRef.current, { fileName: 'downloaded_page.pdf' });
-  // };
 
+
+  const handleGenerateHmac = (data, key) => {
+    const hmac = HmacSHA256(data, key);
+    return hmac;
+  };
+
+  const ApiKey = "Pk_TeStHV9FnLZE1vSidgkH36b4s473lpKYkI58gYgc6M";
+  const SecretKey = "Sk_teSTN-HY[n1]wIO32A-AU0XP5kRZ[tzHpOxQ6bf9]]";
+  const PayerRefNo = uuid4().slice(0, 13);
+  const Amount = state?.licenceFee
+
+  const hashString = PayerRefNo + Amount + ApiKey; 
+  
+  const hashKey = handleGenerateHmac(hashString, SecretKey);
+  console.log('hash key', hashKey)
   const handlePayment = async (e) =>{
     e.preventDefault()
-    try {
-      const res = await axios.post("http://localhost:3003/payment", {
-        chasisNumber: state.chasisNumber,
-        status,
-      });
-      // const res = await axios.post("http://localhost:3003/p", {
-      //   chasisNumber: state.chasisNumber,
-      //   status,
-      // });
-      // const res = await axios.get('http://localhost:3003/users')
-      console.log(res.data) 
-      navigate(-1)
+
+    const formData = new FormData()
+
+     formData.append("ApiKey", "Pk_TeStHV9FnLZE1vSidgkH36b4s473lpKYkI58gYgc6M");
+     formData.append("Hash", hashKey);
+     formData.append("PayerRefNo", PayerRefNo);
+     formData.append("PayerName", state.ownerName);
+     formData.append("Amount", Amount);
+     formData.append("Description", state.licenseType);
+     formData.append("Mobile", "08123456785");
+     formData.append("Email", "sani22@gmail.com");
+     formData.append("ResponseUrl", "http://localhost:5173/payment-successfull/")
+try{
+  const res =
+      // await fetch("https://demo.nabroll.com.ng/api/v1/transactions/verify",{
+       await fetch("https://demo.nabroll.com.ng/api/v1/transactions/initiate",{
+        method: 'POST',
+        body: formData
+      })
+      let result = await res.json()
+      if (result && result.code === "00"){
+        const res = await axios.post(`http://localhost:3003/updateRef/${id}`, {
+          chasisNumber: state.chasisNumber,
+          status,
+          paymentUrl: result.PaymentUrl,
+          transactionRef: result.TransactionRef,
+          paymentCode: result.PaymentCode,
+          payerRefNo: PayerRefNo
+        });
+        localStorage.setItem('plateNumber_user_id', state._id)
+        console.log(res.data)
+        window.location.replace(result.PaymentUrl);
+      }
+       console.log(result);
+
+    // try {
+    //   const res = await axios.post(
+    //     `https://vehicle-backend.onrender.com/payment` ||
+    //     `http://localhost:3003/payment`, 
+
+    //     {
+    //       chasisNumber: state.chasisNumber,
+    //       status,
+    //     }
+    //   )
+      
+    //   console.log(res.data) 
+    //   navigate(-1)
     } catch (err) {
       console.log(err)
     }
@@ -71,12 +137,12 @@ const Invoice = () => {
           <p>
             {" "}
             <span className="font-bold">Application ID: </span>
-            {state.applicationId.slice(0, 17)}
+            {state && state.applicationId.slice(0, 17)}
           </p>
           <p>
             {" "}
             <span className="font-bold">Ref Number: </span>
-            {state.refNumber.slice(0, 17)}
+            {/* {state && state.refNumber.slice(0, 17)} */}
           </p>
         </div>
         <div className="flex justify-around px-64 py-10 capitalize">
@@ -86,7 +152,7 @@ const Invoice = () => {
                 Registration Type
               </span>
               <span className="block text-black/90 font-bold text-4xl">
-                {state.licenseType}
+                {state?.licenseType}
               </span>
             </p>
             <p className="text-center mb-5">
@@ -94,13 +160,13 @@ const Invoice = () => {
                 Owner Name
               </span>
               <span className="block text-black/90 font-bold text-4xl">
-                {state.ownerName}
+                {state?.ownerName}
               </span>
             </p>
             <p className="text-center mb-5">
               <span className="text-black/50 font-bold  text-xl">Address</span>
               <span className="block text-black/90 font-bold text-4xl">
-                {state.address}
+                {state?.address}
               </span>
             </p>
           </div>
@@ -110,7 +176,7 @@ const Invoice = () => {
                 Vehicle Make
               </span>
               <span className="block text-black/90 font-bold text-4xl">
-                {state.vehicleMake}
+                {state?.vehicleMake}
               </span>
             </p>
             <p className="text-center mb-5">
@@ -118,7 +184,7 @@ const Invoice = () => {
                 Vehicle Type
               </span>
               <span className="block text-black/90 font-bold text-4xl">
-                {state.vehicleType}
+                {state?.vehicleType}
               </span>
             </p>
             <p className="text-center mb-5">
@@ -126,7 +192,7 @@ const Invoice = () => {
                 chasis Number
               </span>
               <span className="block text-black/90 font-bold text-4xl">
-                {state.chasisNumber}
+                {state?.chasisNumber}
               </span>
             </p>
           </div>
@@ -138,7 +204,7 @@ const Invoice = () => {
               ₦ {""}
               {new Intl.NumberFormat("en-IN", {
                 maximumSignificantDigits: 3,
-              }).format(state.licenceFee)}
+              }).format(state?.licenceFee)}
             </span>
             <button className="text-sm my-2 flex justify-center capitalize text-blue-900 hover:underline w-full">
               instructions
@@ -173,17 +239,25 @@ const Invoice = () => {
 
             <form onSubmit={handlePayment}>
               <div className="text-center my-16">
-                <button
-                  className="px-4 py-2 bg-green-500 hover:text-white"
-                >
+                <button  className="px-4 py-2 bg-green-500 hover:text-white">
                   Make payment
                 </button>
-                <p className="capitalize my-4">clicking this button will simulate payment</p>
+                <p className="capitalize my-4">
+                  make payment of{" "}
+                  <span className="font-bold">
+                    ₦{" "}
+                    {new Intl.NumberFormat("en-IN", {
+                      maximumSignificantDigits: 3,
+                    }).format(state.licenceFee)}
+                  </span>
+                </p>
               </div>
             </form>
           </div>
         </div>
+                  
       )}
+
     </div>
   );
 };

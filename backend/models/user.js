@@ -11,6 +11,16 @@ const user = new mongoose.Schema(
       type: String,
       required: true,
     },
+    phoneNumber: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     vehicleMake: {
       type: String,
       required: true,
@@ -44,14 +54,34 @@ const user = new mongoose.Schema(
       type: String,
       required: true,
     },
-    transactionId: String,
+    transactionId: {
+      type: String,
+    },
+    transactionRef: {
+      type: String,
+    },
+    paymentCode: {
+      type: String,
+      default: ''
+    },
+    paymentUrl: String,
+    paymentCode: String,
     applicationId: String,
-    refNumber: String,
+    payerRefNo: String,
+    nabrolRef: String,
     color: String,
+    plateNumber: String,
+    approved: {
+      type: String,
+      default: 'pending'
+    },
     status: {
       type: "String",
       default: "pending",
     },
+    dateOfBirth: Date,
+    issueDate: Date,
+    expiredDate: Date
   },
   { timestamps: true }
 );
