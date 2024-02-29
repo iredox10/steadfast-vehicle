@@ -13,7 +13,7 @@ const navigate = useNavigate()
     e.preventDefault();
     try {
       const res = await axios.post(
-        // `https://vehicle-backend.onrender.com/login`  || 
+        `https://vehicle-backend.onrender.com/login`  || 
          'http://localhost:3003/login',
         {
           email,
@@ -28,7 +28,6 @@ const navigate = useNavigate()
     }
   };
 
-  // chasisNumber sampel:6778dfq
   return (
     <div className="grid grid-cols-6 w-full min-h-screen ">
       <section className="bg-green-700 col-start-1 col-end-3 p-2">

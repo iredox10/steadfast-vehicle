@@ -80,7 +80,7 @@ const Home = () => {
     // navigate('invoice', {state:{ownerName,address,vehicleMake,vehicleType,licenseType,licenceFee}})
     try {
       const res = await axios.post(
-        // `https://vehicle-backend.onrender.com/register` ||
+        `https://vehicle-backend.onrender.com/register` ||
         'http://localhost:3003/register',
         {
           ownerName,
@@ -100,7 +100,8 @@ const Home = () => {
         }
       );
       const user = res.data
-      navigate("/user-dashboard", { state: user });
+      // navigate("/user-dashboard", { state: user });
+      navigate(`/user-dashboard/${user._id}`, {state: user})
       console.log(user)
     } catch (err) {
       setErr(err.err)

@@ -84,7 +84,7 @@ try{
       })
       let result = await res.json()
       if (result && result.code === "00"){
-        const res = await axios.post(`http://localhost:3003/updateRef/${id}`, {
+        const res = await axios.post(`http://localhost:3003/updateRef/${id} || `, {
           chasisNumber: state.chasisNumber,
           status,
           paymentUrl: result.PaymentUrl,

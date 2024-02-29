@@ -24,7 +24,7 @@ const PaymentSuccess = () => {
     const fetch = async () => {
       try {
         const user = await axios(
-          // `https://vehicle-backend.onrender.com/user/${user.chasisNumber} ||`
+          // `https://vehicle-backend.onrender.com/user/${id}` ||
           `http://localhost:3003/user/${id}`
         );
         // console.log(user.data);
@@ -35,7 +35,8 @@ const PaymentSuccess = () => {
       }
     };
     fetch();
-  }, []);
+  }, [id]);
+
   const ApiKey = "Pk_TeStHV9FnLZE1vSidgkH36b4s473lpKYkI58gYgc6M";
   const SecretKey = "Sk_teSTN-HY[n1]wIO32A-AU0XP5kRZ[tzHpOxQ6bf9]]";
   const Amount = user?.licenceFee;
@@ -71,6 +72,7 @@ const PaymentSuccess = () => {
           // setLoading(true);
           const data = await res.json();
           console.log(data);
+          // if(data.msg == 'Pending')
           if (data) {
             setMsg(data.msg);
             // setLoading(false);
@@ -83,18 +85,18 @@ const PaymentSuccess = () => {
       };
       fetchData();
     }
-  }, []);
+  }, [user]);
 
   return (
     <div className="absolute top-2/4 text-center    left-[40%] ">
-      {loading ? (
+      {!loading ? (
         <div>loading... </div>
       ) : (
         <div>
           <div className=" top-2/4  left-[40%] ">
             <p className="text-2xl capitalize">{msg} </p>
           </div>
-          {loading ? <button
+          {!loading ? <button
             onClick={userPage}
             className="capitalize bg-green-800 my-5 p-2 hover:text-white "
           >
