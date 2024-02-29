@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import jigawa_logo from "../../src/assets/jigawa_logo.png";
 import axios from "axios";
@@ -46,7 +46,7 @@ const AdminUserDashboard = () => {
       console.log(err);
     }
   };
-
+      
   return (
     <div>
       {user && (
